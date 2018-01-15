@@ -87,16 +87,16 @@ class KotlinUFunctionCallExpression(
 
     override fun getArgumentForParameter(i: Int): UExpression? {
         val resolvedCall = resolvedCall ?: return null
-        var actualParamIndex = i
-        if (resolvedCall.extensionReceiver != null) {
-            if (actualParamIndex == 0)
-                return receiver
-            else
-                actualParamIndex = actualParamIndex - 1
+        val actualParamIndex = if (resolvedCall.extensionReceiver == null) i else i - 1
+        if (actualParamIndex == -1) return receiver
+        val arguments = resolvedCall.valueArguments.entries.find { it.key.index == actualParamIndex }?.value?.arguments ?: return null
+        return when {
+            arguments.isEmpty() -> null
+            arguments.size == 1 -> KotlinConverter.convertOrEmpty(arguments.single().getArgumentExpression(), this)
+            else -> KotlinUExpressionList(null, VARARGS, this).apply {
+                expressions = arguments.map { KotlinConverter.convertOrEmpty(it.getArgumentExpression(), this) }
+            }
         }
-        val argumentExpression = resolvedCall.valueArguments.entries.find { it.key.index == actualParamIndex }?.value
-            ?.arguments?.singleOrNull()?.getArgumentExpression() ?: return null
-        return valueArguments.find { it.psi == argumentExpression }
     }
 
     override val typeArgumentCount: Int
@@ -154,3 +154,5 @@ class KotlinUFunctionCallExpression(
     }
 
 }
+
+val VARARGS = UastSpecialExpressionKind("varargs")

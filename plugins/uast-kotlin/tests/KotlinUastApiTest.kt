@@ -228,21 +228,24 @@ class KotlinUastApiTest : AbstractKotlinUastTest() {
     @Test
     fun testParametersDisorder() = doTest("ParametersDisorder") { _, file ->
 
-        fun assertArguments(argumentsInPositionalOrder: List<String?>, refText: String) =
+        fun assertArguments(argumentsInPositionalOrder: List<String?>?, refText: String) =
             file.findElementByTextFromPsi<UCallExpression>(refText).let { call ->
                 if (call !is UCallExpressionEx) throw AssertionError("${call.javaClass} is not a UCallExpressionEx")
                 Assert.assertEquals(
-                    argumentsInPositionalOrder,
-                    (0 until call.resolve()!!.parameterList.parametersCount).map {
+                    argumentsInPositionalOrder, call.resolve()?.let { psiMethod ->
+                        (0 until psiMethod.parameterList.parametersCount).map {
                         call.getArgumentForParameter(it)?.asRenderString()
+                        }
                     }
                 )
             }
 
 
         assertArguments(listOf("2", "2.2"), "global(b = 2.2F, a = 2)")
-        assertArguments(listOf(null, "4.0"), "withDefault(d = 4F)")
-        assertArguments(listOf("\"abc\"", "1", "1.2"), "withReceiver(1, 1.2F)")
+        assertArguments(listOf(null, "\"bbb\""), "withDefault(d = \"bbb\")")
+        assertArguments(listOf("1.3", "3.4"), "atan2(1.3, 3.4)")
+        assertArguments(null, "unresolvedMethod(\"param1\", \"param2\")")
+        assertArguments(listOf("\"%i %i %i\"", "varargs 1 : 2 : 3"), "format(\"%i %i %i\", 1, 2, 3)")
     }
 
 }
