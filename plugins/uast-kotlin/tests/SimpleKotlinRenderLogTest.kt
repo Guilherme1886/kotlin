@@ -67,4 +67,7 @@ class SimpleKotlinRenderLogTest : AbstractKotlinRenderLogTest() {
 
     @Test
     fun testReceiverFun() = doTest("ReceiverFun")
+
+    @Test
+    fun testParametersDisorder() = doTest("ParametersDisorder")
 }

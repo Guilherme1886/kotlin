@@ -3,11 +3,7 @@ package org.jetbrains.uast.test.kotlin
 import com.intellij.psi.PsiModifier
 import com.intellij.testFramework.UsefulTestCase
 import org.jetbrains.kotlin.asJava.toLightAnnotation
-import org.jetbrains.kotlin.psi.KtAnnotationEntry
-import org.jetbrains.kotlin.psi.KtBinaryExpression
-import org.jetbrains.kotlin.psi.KtLiteralStringTemplateEntry
-import org.jetbrains.kotlin.psi.KtStringTemplateExpression
-import org.jetbrains.kotlin.psi.KtUserType
+import org.jetbrains.kotlin.psi.*
 import org.jetbrains.kotlin.psi.psiUtil.getParentOfType
 import org.jetbrains.kotlin.test.testFramework.KtUsefulTestCase
 import org.jetbrains.kotlin.utils.addToStdlib.cast
@@ -227,6 +223,29 @@ class KotlinUastApiTest : AbstractKotlinUastTest() {
             }
         }
     }
+
+
+    @Test
+    fun testParametersDisorder() = doTest("ParametersDisorder") { _, file ->
+
+        fun assertArguments(argumentsInPositionalOrder: List<String?>, refText: String) =
+            file.findElementByTextFromPsi<UCallExpression>(refText).let { call ->
+                if (call !is UCallExpressionEx) throw AssertionError("${call.javaClass} is not a UCallExpressionEx")
+                Assert.assertEquals(
+                    argumentsInPositionalOrder,
+                    (0 until call.resolve()!!.parameterList.parametersCount).map {
+                        call.getArgumentForParameter(it)?.asRenderString()
+                    }
+                )
+            }
+
+
+        assertArguments(listOf("2", "2.2"), "global(b = 2.2F, a = 2)")
+        assertArguments(listOf(null, "4.0"), "withDefault(d = 4F)")
+        assertArguments(listOf("\"abc\"", "1", "1.2"), "withReceiver(1, 1.2F)")
+    }
+
 }
 
-fun <T, R> Iterable<T>.assertedFind(value: R, transform: (T) -> R): T = find { transform(it) == value } ?: throw AssertionError("'$value' not found, only ${this.joinToString { transform(it).toString() }}")
+fun <T, R> Iterable<T>.assertedFind(value: R, transform: (T) -> R): T =
+    find { transform(it) == value } ?: throw AssertionError("'$value' not found, only ${this.joinToString { transform(it).toString() }}")

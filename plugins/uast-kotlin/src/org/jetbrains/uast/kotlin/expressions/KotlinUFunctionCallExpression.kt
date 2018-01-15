@@ -40,7 +40,7 @@ class KotlinUFunctionCallExpression(
         override val psi: KtCallElement,
         givenParent: UElement?,
         private val _resolvedCall: ResolvedCall<*>?
-) : KotlinAbstractUExpression(givenParent), UCallExpression, KotlinUElementWithType {
+) : KotlinAbstractUExpression(givenParent), UCallExpressionEx, KotlinUElementWithType {
     companion object {
         fun resolveSource(descriptor: DeclarationDescriptor, source: PsiElement?): PsiMethod? {
             if (descriptor is ConstructorDescriptor && descriptor.isPrimary
@@ -84,6 +84,20 @@ class KotlinUFunctionCallExpression(
         get() = psi.valueArguments.size
 
     override val valueArguments by lz { psi.valueArguments.map { KotlinConverter.convertOrEmpty(it.getArgumentExpression(), this) } }
+
+    override fun getArgumentForParameter(i: Int): UExpression? {
+        val resolvedCall = resolvedCall ?: return null
+        var actualParamIndex = i
+        if (resolvedCall.extensionReceiver != null) {
+            if (actualParamIndex == 0)
+                return receiver
+            else
+                actualParamIndex = actualParamIndex - 1
+        }
+        val argumentExpression = resolvedCall.valueArguments.entries.find { it.key.index == actualParamIndex }?.value
+            ?.arguments?.singleOrNull()?.getArgumentExpression() ?: return null
+        return valueArguments.find { it.psi == argumentExpression }
+    }
 
     override val typeArgumentCount: Int
         get() = psi.typeArguments.size
