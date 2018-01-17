@@ -93,9 +93,7 @@ class KotlinUFunctionCallExpression(
         return when {
             arguments.isEmpty() -> null
             arguments.size == 1 -> KotlinConverter.convertOrEmpty(arguments.single().getArgumentExpression(), this)
-            else -> KotlinUExpressionList(null, VARARGS, this).apply {
-                expressions = arguments.map { KotlinConverter.convertOrEmpty(it.getArgumentExpression(), this) }
-            }
+            else -> KotlinUVarargExpression(arguments, this)
         }
     }
 
@@ -154,5 +152,3 @@ class KotlinUFunctionCallExpression(
     }
 
 }
-
-val VARARGS = UastSpecialExpressionKind("varargs")

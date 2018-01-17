@@ -245,7 +245,7 @@ class KotlinUastApiTest : AbstractKotlinUastTest() {
         assertArguments(listOf(null, "\"bbb\""), "withDefault(d = \"bbb\")")
         assertArguments(listOf("1.3", "3.4"), "atan2(1.3, 3.4)")
         assertArguments(null, "unresolvedMethod(\"param1\", \"param2\")")
-        assertArguments(listOf("\"%i %i %i\"", "varargs 1 : 2 : 3"), "format(\"%i %i %i\", 1, 2, 3)")
+        assertArguments(listOf("\"%i %i %i\"", "<noref>(1, 2, 3)"), "format(\"%i %i %i\", 1, 2, 3)")
     }
 
 }
